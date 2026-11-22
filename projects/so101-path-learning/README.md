@@ -1,20 +1,10 @@
 # SO-101 path learning
 
-The simulator runs three SO-101 tasks in MuJoCo. Obstacle reach and shelf inspection use trained path scorers. Puck push chooses a paddle stroke from similar training layouts. Choose a controller and scrub the replay to see where strategies diverge. Settings include layout adjustments, planned paths, camera angles and measurements.
+Four MuJoCo tasks use labeled simulator data. For obstacle reach and shelf inspection, a trained neural network scores candidate paths. For handle pickup and peg placement, ridge regressors estimate planar poses from clean overhead segmentation masks.
 
-![SO-101 pushing a blue puck across a raised work surface](media/simulator.png)
+![SO-101 grasping a handled part in simulation](media/simulator.png)
 
-[Watch the obstacle reach comparison](web/demo.mp4) · [Watch the puck comparison](web/puck.mp4) · [Watch the shelf comparison](web/shelf.mp4) · [Shelf study](SHELF_STUDY.md) · [Obstacle reach results](RESULTS.md) · [Run autoresearch](program.md)
-
-[Run the interactive article locally](article/README.md). It includes the video player, 3D viewer, interactive training curve and per-run data.
-
-## Start with these replays
-
-In **Puck push**, both controllers get the same 60 mm opening layout. The learned stroke finishes 14.62 mm from the target center and the straight stroke finishes 9.50 mm away. Success requires the jaws to hold the paddle throughout puck contact, a clean stroke, a final error of at most 10 mm and a final puck speed below 5 mm/s. Choose **Release paddle** to see what happens when the arm opens its jaws.
-
-In **Shelf inspection**, open **Settings and run details** and select **Inspect closest pass** to see the jaw pass the roof by 0.75 mm. Two further examples show where the learned and fixed routes win. In **Obstacle reach**, select **Fixture** in settings to switch between the fence, post and overhead zone.
-
-On the narrowest tested opening, 90 mm, the original library offered a geometrically clear inward route in 3 of 96 layouts. With six additional shelf-entry routes, the fixed and learned methods each completed 74 of the 96 full inspections. [Per-layout results](experiments/shelf/episodes.json)
+[Interactive article](https://dunlichan.com/writings/so101-path-learning/) · [Run the article locally](article/README.md) · [Shelf study](SHELF_STUDY.md) · [Obstacle reach results](RESULTS.md)
 
 ## Open the studio
 
@@ -30,15 +20,18 @@ OPENBLAS_NUM_THREADS=1 .venv/bin/python studio.py --open
 
 The default URL is http://127.0.0.1:8766/. The browser uses WebGL 2 and the included Three.js modules and geometry. Each task has a standalone recorded comparison.
 
-## Puck push study
+## Supervised grasp and placement
 
-[Robot path learning with an SO-101 arm](https://dunlichan.com/writings/so101-path-learning/) includes the path-learning simulator, measured training curve, paddle comparison and surface-transfer test. To reproduce the transfer test on the original 64 layouts, run `python puck_transfer.py --workers 6`. It keeps both controllers frozen, checks each nominal outcome against the original trials and writes [the per-run results](experiments/puck/transfer.json).
+Run `python visual_study.py` from this directory to generate 1,024 training and 256 validation layouts, fit the two regressors on CPU and evaluate 32 independent physical layouts. The synthetic overhead masks are rasterized from the known geometry. Each estimator receives the centroid and normalized shape moments from its own mask and predicts (x, y, yaw). Inverse kinematics and jaw timing execute the predicted grasp and placement.
 
-In the original wrist-mounted paddle experiment, the controller learns which of seven lateral paddle offsets to use from the outcomes of 192 simulated training layouts. It estimates the cost of each action using nearby layouts in starting position, push direction and distance. Validation on 48 separate layouts selected three neighbors. On 64 held-out layouts, the learned push succeeded 45 times with 12.0 mm mean endpoint error. The straight push succeeded 18 times with 20.1 mm mean error. Validation selected the straight push as the best constant action. These figures describe one simulated puck, paddle, friction setting and split. [Model](experiments/puck/push.json) · [Episode data](experiments/puck/episodes.json)
+| Task | Fixed pose | Predicted pose | Predicted XY error |
+| --- | ---: | ---: | ---: |
+| Hold a 35 mm lift for 0.5 s | 24/32 | 32/32 | 0.15 mm |
+| Release and seat on a peg for 0.5 s | 2/32 | 32/32 | 0.22 mm |
 
-The live puck demo starts with an independent paddle between two jaw pads. MuJoCo integrates the free body through contact and gravity. Select **Gripper view** to inspect the contact or **Release paddle** to open the fingers. The original stroke selector scored 21/64 with the hand-held paddle and straight strokes scored 7/64 on the same layouts. Run `python puck_grasp_transfer.py` to reproduce the paired results and the open-jaw control. [Hand-held paddle trials](experiments/puck/grasp-transfer.json)
+Both placement controllers use the same predicted pickup. Fixed poses are training-set means. The primary test uses 96 × 96 masks and 2 mm side clearance. Halving the resolution raised mean XY errors to 0.50 and 0.61 mm. These experiments assume a level part, a fixed overhead projection and clean object masks.
 
-Reproduce the CPU study with `python puck_study.py --workers 8`. With the studio running, `python record_puck.py` records synchronized browser frames using Playwright, Pillow and ffmpeg. The task selection and visible success condition draw on how ManiSkill presents manipulation tasks and how robosuite defines environment goals. [ManiSkill task gallery](https://maniskill.readthedocs.io/en/latest/tasks/table_top_gripper/index.html) · [robosuite environments](https://robosuite.ai/docs/modules/environments.html)
+[Training and evaluation](visual_study.py) · [Mask generation and inference](visual_pose.py) · [Weights and paired trials](experiments/visual-pose/) · [Pickup film](web/pickup.mp4) · [Placement film](web/placement.mp4)
 
 ## Single-fixture model
 

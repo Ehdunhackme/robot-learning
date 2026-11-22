@@ -121,14 +121,20 @@ class Handler(SimpleHTTPRequestHandler):
         if url.path=="/api/info":
             report=json.loads((ROOT/"experiments/final.json").read_text())
             shelf_report=json.loads((ROOT/"experiments/shelf/results.json").read_text())
-            puck_report=json.loads((ROOT/"experiments/puck/results.json").read_text())
+            visual_report=json.loads((ROOT/"experiments/visual-pose/results.json").read_text())
             return self.send_json(dict(scenes=SCENES+[("Shelf inspection",SHELF_SEED,3)],report=report,
-                                       shelf=shelf_report,puck=puck_report,examples=SHELF_EXAMPLES))
+                                       shelf=shelf_report,visual=visual_report["scores"],examples=SHELF_EXAMPLES))
         if url.path=="/api/run":
             query=parse_qs(url.query)
             try:
                 value=lambda name,default: int(query.get(name,[default])[0])
                 f=value("family",0);seed=value("seed",SHELF_SEED if f==3 else SCENES[0][1])
+                if f in (8,9):
+                    from visual_pose import visual_replay
+                    pixels,clearance=value("pixels",96),value("clearance",2)
+                    if not (0<=seed<=2**31-1 and 48<=pixels<=128 and 1<=clearance<=4):
+                        raise ValueError("Choose settings within the displayed range.")
+                    return self.send_json(visual_replay("pickup" if f==8 else "placement",seed,pixels,clearance))
                 if f in (6,7):
                     from gripper_courses import course_replay
                     transfer=f==6

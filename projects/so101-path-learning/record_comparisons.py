@@ -12,6 +12,7 @@ from record_demo import font
 ROOT = Path(__file__).resolve().parent
 WIDTH, HEIGHT, FPS = 720, 720, 20
 SCENES = {
+    "pickup": [(8, 813009)], "placement": [(9, 813000)],
     "transfer": [(6, 2040)], "relay": [(7, 2026)],
     "assembly": [(5, 2026)],
     "puck": [(4, 2402)], "shelf": [(3, 720001)],
@@ -29,7 +30,7 @@ window.loadRun=async(family,seed)=>{
  const response=await fetch('/api/run?family='+family+'&seed='+seed);
  if(!response.ok)throw Error(await response.text());
  window.run=await response.json();view.setup(run);view.reset();view.paths(false);
- return run.assembly?run.scripted.seconds:Math.max(run.direct.seconds,run.learned.seconds);
+ return run.scripted?run.scripted.seconds:Math.max(run.direct.seconds,run.learned.seconds);
 };
 window.shot=(mode,time)=>{
  const path=run[mode], frames=path.frames;
@@ -58,6 +59,8 @@ def record(page, task, output):
                 length = page.evaluate("([f,s])=>loadRun(f,s)",[family,seed])
                 labels = ("Straight push","Learned push") if task=="puck" else ("Direct reach","Learned route")
                 if task=="assembly": labels=("Initial peg estimate","Recheck peg position")
+                if task=="pickup": labels=("Fixed grasp","Predicted grasp")
+                if task=="placement": labels=("Fixed peg pose","Predicted peg pose")
                 if task=="transfer": labels=("Low carry","Clear the rail")
                 if task=="relay": labels=("Estimated regrasp","Measured regrasp")
                 for idx in range(round(length*FPS)+1):
@@ -70,7 +73,7 @@ def record(page, task, output):
                         if task=="reach":
                             draw.text((WIDTH*side+22,52),("Low fence","Tall post","Overhead zone")[section],
                                       font=font(18),fill="#555b62")
-                        if task=="puck" and side==1 and idx==round(length*FPS*.47):
+                        if task=="placement" and side==1 and idx==round(length*FPS*.47):
                             pic.crop((0,152,720,530)).resize((1200,630),Image.Resampling.LANCZOS).save(output/"social.jpg",quality=91)
                     draw.line((WIDTH-1,0,WIDTH-1,HEIGHT),fill="#aeb2b6",width=1)
                     if not section and idx==round(length*FPS*.47):

@@ -13,9 +13,9 @@
 </div></header>
 <main id="workbench" class="shell">
   <nav class="tasks" aria-label="Simulation tasks">
-    <button data-task="reach">Obstacle reach</button><button data-task="shelf">Shelf inspection</button><button data-task="puck">Puck push</button>
+    <button data-task="reach">Obstacle reach</button><button data-task="shelf">Shelf inspection</button><button data-task="pickup">Handle pickup</button><button data-task="placement">Peg placement</button>
   </nav>
-  <section class="intro"><div><h1 id="sceneTitle">Puck push</h1><p id="brief">Slide the blue puck into the target circle and let it settle.</p></div><button class="secondary" id="new" disabled>New layout</button></section>
+  <section class="intro"><div><h1 id="sceneTitle">Obstacle reach</h1><p id="brief">Move the gripper to the marked point while clearing the fixture.</p></div><button class="secondary" id="new" disabled>New layout</button></section>
   <section class="stage" aria-label="Simulation replay">
     <div id="viewport"><p id="loading" role="status">Loading the arm…</p></div>
     <div class="transport">
@@ -35,7 +35,7 @@
         <div id="sliders"></div><button id="run" class="secondary" disabled>Apply layout</button>
       </section>
       <section><h2>View</h2>
-        <label>Camera<select id="camera"><option value="work">Workcell</option><option value="top">Overhead</option><option id="gripView" value="grip">Gripper view</option><option id="mouthView" value="mouth">Shelf opening</option></select></label>
+        <label>Camera<select id="camera"><option value="work">Workcell</option><option value="top">Overhead</option><option id="mouthView" value="mouth">Shelf opening</option></select></label>
         <label id="sectionRow" class="check"><input id="section" type="checkbox" checked> Cutaway shelf</label>
         <label id="pathRow" class="check"><input id="paths" type="checkbox" checked> Show planned paths</label>
         <button id="resetView" class="textlink">Reset camera</button>
