@@ -12,7 +12,7 @@ const config = {
     sliders:[['clearance','Side clearance',1,4,3,'mm'],['error','Peg estimate error',0,8,5,'mm']],
     methods:[['scripted','Recheck peg'],['nominal','Initial estimate'],['open','Jaws open']]},
   puck: {title:'Puck push', brief:'Slide the blue puck into the target circle and let it settle.', seed:2402,
-    sliders:[['distance','Push distance',45,77,60,'mm']], methods:[['learned','Learned push'],['direct','Straight push']]},
+    sliders:[['distance','Push distance',45,77,60,'mm']], methods:[['learned','Learned push'],['direct','Straight push'],['release','Release paddle']]},
   shelf: {title:'Shelf inspection', brief:'Reach inside the shelf, hold at the target, then return home.', seed:720001,
     sliders:[['width','Opening width',85,190,110,'mm'],['depth','Inspection depth',45,105,75,'mm']],
     methods:[['learned','Learned route'],['fixed','Fixed route'],['direct','Direct reach']]},
@@ -48,6 +48,7 @@ function applyTask(key,writeUrl=true){
   }
   const shelf=key==='shelf',puck=key==='puck';
   for(const id of ['exampleRow','mouthView','sectionRow','closest'])$(id).hidden=!shelf;
+  $('gripView').hidden=!puck;
   $('fixtureRow').hidden=key!=='reach';$('pathRow').hidden=false;
   $('family').value='0';$('camera').value='work';view?.paths($('paths').checked);
   $('section').checked=true;view?.cutaway(true);syncExample();
@@ -100,7 +101,7 @@ function pick(key){
 }
 function closestIndex(p){return p.gaps.reduce((best,g,i)=>g.mm<p.gaps[best].mm?i:best,0);}
 function outcomeText(p){
-  if(p.outcome==='contact')return 'Contact';
+  if(p.outcome==='contact')return mode==='release'?'Paddle dropped':'Contact';
   if(p.outcome==='reached')return {relay:'Both placements complete',transfer:'Rail cleared and nut seated',assembly:'Seated and released',puck:'On target',shelf:'Inspection complete',reach:'Target reached'}[task];
   if(task==='puck' && p.error_mm<=10 && !p.settled)return 'Still moving';
   return task==='puck'?'Outside target':'Missed tolerance';
@@ -165,7 +166,7 @@ function showResults(data){
     for(const row of rows){const tr=b.insertRow();for(const v of row)add(tr,'td',v);}
   }
   const push=data.puck,r=data.report,s=data.shelf;
-  add(root,'h2','Puck push');add(root,'p','The arm had to contact the puck and leave it settled within 10 mm of the target center. Each controller received the same '+push.test+' new layouts.');
+  add(root,'h2','Wrist-mounted paddle study');add(root,'p','The arm had to contact the puck and leave it settled within 10 mm of the target center. Each controller received the same '+push.test+' new layouts.');
   table(root,['Controller','Completed','Mean final error'],[['Learned push','learned'],['Straight push','straight'],['Validation-best fixed push','fixed']].map(([name,k])=>[name,push.scores[k].completed+' / '+push.test,push.scores[k].mean_error_mm.toFixed(1)+' mm']));
   add(root,'h2','Shelf inspection');add(root,'p','The same 96 layouts were tested at each width. The arm had to enter, hold for 0.4 seconds and return home without contact.');
   table(root,['Opening','Direct','Fixed','Learned'],s.by_width.map(w=>[w.width+' mm',...['direct','fixed','learned'].map(k=>w[k]+' / '+w.n)]));
