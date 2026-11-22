@@ -1,34 +1,37 @@
 import { expect, test } from "@playwright/test";
 
+test("a retired task link opens the supervised reach replay", async ({page}) => {
+  await page.goto("/writings/so101-path-learning/?task=relay#gripper-courses");
+  await expect(page).toHaveURL(/\/so101-path-learning\/#replays$/);
+  await expect(page.getByRole("combobox", {name:"Task", exact:true})).toHaveValue("reach");
+  await expect(page.locator("#replays iframe")).toHaveAttribute("src", /task=reach$/);
+});
+
+test("an old handle pickup link opens peg placement", async ({page}) => {
+  await page.goto("/writings/so101-path-learning/?task=pickup#replays");
+  await expect(page).toHaveURL(/task=placement#replays$/);
+  await expect(page.getByRole("combobox", {name:"Task", exact:true})).toHaveValue("placement");
+  await expect(page.locator("#replays iframe")).toHaveAttribute("src", /task=placement$/);
+});
+
 test("the article exposes its recorded comparisons, matched trials and study data", async ({
   page,
   request,
 }) => {
-  await page.goto("/");
+  await page.goto("/writings/so101-path-learning/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Robot path learning with an SO-101 arm",
+    "Teaching an SO-101 arm with supervised learning",
   );
-  await expect(
-    page.getByRole("combobox", { name: "Paddle offset", exact: true }),
-  ).toHaveValue("-24");
-  await page
-    .getByRole("combobox", { name: "Paddle offset", exact: true })
-    .selectOption("0");
-  await expect(
-    page.getByText("12.52 mm from center", { exact: true }),
-  ).toBeVisible();
-  await page
-    .getByRole("combobox", { name: "Sliding friction", exact: true })
-    .selectOption("0");
-  await expect(
-    page
-      .locator("figure[aria-label='Paired outcomes by surface friction'] li")
-      .nth(1),
-  ).toHaveText("Learned only19");
+  await expect(page.locator("article header").getByRole("link",{name:"GitHub"}))
+    .toHaveAttribute("href","https://github.com/Ehdunhackme/robot-learning/tree/main/projects/so101-path-learning");
+  await expect(page.getByRole("table",{name:"Gripper results on 32 held-out layouts"})).toBeVisible();
   await expect(page).toHaveURL(/so101-path-learning/);
-  await expect(page.getByRole("table", {name:"Nuts seated and released on 32 layouts"})).toBeVisible();
+  await expect(page.getByRole("table", {name:"Completed shelf inspections out of 96"})).toBeVisible();
   await expect(page.locator("article details")).toHaveCount(0);
+  await expect(page.locator("article figcaption")).toHaveCount(0);
   const curve = page.getByRole("slider", {name:"Inspect training update"});
+  await curve.scrollIntoViewIfNeeded();
+  await expect(curve.locator("..")).toHaveAttribute("data-visible","true");
   await curve.focus();
   await curve.press("Home");
   await expect(curve).toHaveAttribute("aria-valuetext", /Update 0, training 0.7036/);
@@ -42,7 +45,15 @@ test("the article exposes its recorded comparisons, matched trials and study dat
   await page.getByRole("button", {name:"Show full run"}).click();
   await expect(page.getByRole("heading",{name:"Cite this post"})).toBeVisible();
   await expect(page.locator("#ref-planning a")).toHaveText(/MotionBenchMaker/);
-  await expect(page.getByRole("combobox",{name:"Task",exact:true})).toHaveValue("relay");
+  const tasks = page.getByRole("combobox", {name:"Task", exact:true});
+  await expect(tasks).toHaveValue("reach");
+  await expect(tasks.locator("option")).toHaveText(["Obstacle reach", "Shelf inspection", "Peg placement"]);
+  expect(await tasks.locator("optgroup").evaluateAll(groups => groups.map(g => g.getAttribute("label"))))
+    .toEqual(["Supervised path scoring", "Supervised pose estimation"]);
+  const data = await (await request.get("/assets/writings/arcbench/replay/placement.json")).json();
+  expect(data.observation.size).toBe(96);
+  expect(data.learned.outcome).toBe("reached");
+  expect(data.direct.outcome).toBe("miss");
   await page
     .getByRole("combobox", { name: "Task", exact: true })
     .selectOption("shelf");
@@ -62,9 +73,6 @@ test("the article exposes its recorded comparisons, matched trials and study dat
   await expect(page.getByRole("slider",{name:"Video position"})).toBeVisible();
   await explorer.click();
   await expect(frame.getByRole("slider", {name:/Opening width/})).toBeVisible();
-  const data = await request.get("/assets/writings/arcbench/puck-trials.csv");
-  expect(data.ok()).toBeTruthy();
-  expect((await data.text()).trim().split(/\r?\n/)).toHaveLength(385);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

@@ -1,6 +1,6 @@
 # SO-101 path learning
 
-Four MuJoCo tasks use labeled simulator data. For obstacle reach and shelf inspection, a trained neural network scores candidate paths. For handle pickup and peg placement, ridge regressors estimate planar poses from clean overhead segmentation masks.
+The demo has three MuJoCo tasks. For obstacle reach and shelf inspection, a trained neural network scores candidate paths. For peg placement, two ridge regressors estimate the nut and peg poses from an overhead image.
 
 ![SO-101 grasping a handled part in simulation](media/simulator.png)
 

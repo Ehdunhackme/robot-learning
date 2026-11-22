@@ -4,8 +4,6 @@ import {buildScene} from './scene.js';
 
 const $ = id => document.getElementById(id);
 const config = {
-  pickup: {title:'Handle pickup', brief:'Locate the handle, lift the part and hold it between both jaws.',seed:813009,
-    sliders:[['pixels','Mask width',48,128,96,'px']],methods:[['learned','Predicted grasp'],['direct','Fixed grasp']]},
   placement: {title:'Peg placement', brief:'Carry the part to the predicted peg pose and release it.',seed:813000,
     sliders:[['pixels','Mask width',48,128,96,'px'],['clearance','Peg clearance',1,4,2,'mm']],methods:[['learned','Predicted peg pose'],['direct','Fixed peg pose']]},
   shelf: {title:'Shelf inspection', brief:'Reach inside the shelf, hold at the target, then return home.', seed:720001,
@@ -17,6 +15,10 @@ const config = {
 };
 const url = new URL(location.href);
 let task = url.searchParams.get('task') || url.searchParams.get('study') || 'reach';
+if(task==='pickup'){
+  task='placement';url.searchParams.delete('study');url.searchParams.set('task',task);
+  history.replaceState(null,'',url);
+}
 if (!Object.hasOwn(config,task)) task='reach';
 let info, view, run, seed, mode='learned', ticket=0, time=0, playing=false, last=0, inspect=false;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -59,7 +61,7 @@ function busy(on){
 async function simulate(){
   if(!view)return;
   const seq=++ticket;setPlay(false);busy(true);message('');$('loading').hidden=false;$('loading').textContent='Preparing replay…';
-  const query=new URLSearchParams({family:task==='pickup'?8:task==='placement'?9:task==='shelf'?3:$('family').value,seed});
+  const query=new URLSearchParams({family:task==='placement'?9:task==='shelf'?3:$('family').value,seed});
   for(const [id] of config[task].sliders)query.set(id,$(id).value);
   try{
     let data=cache.get(query.toString());
@@ -91,21 +93,21 @@ function pick(key){
   metric('Gripper travel',p.distance_mm+' mm');
   if(run.observation){
     metric('Pose estimate error',p.pose_error_mm+' mm');metric('Peak lift',p.lift_mm+' mm');
-    metric(task==='pickup'?'Time held':'Time seated',(task==='pickup'?p.held_s:p.seated_s)+' s');
+    metric('Time seated',p.seated_s+' s');
   }
-  if(task!=='pickup')metric(task==='shelf'?'Final home error':'Final target error',p.error_mm+' mm');
+  metric(task==='shelf'?'Final home error':'Final target error',p.error_mm+' mm');
   if(task==='shelf'){const g=p.gaps[closestIndex(p)];metric('Closest surfaces',pretty(g.link)+' / '+g.panel.toLowerCase());metric('Sampled clearance',g.mm.toFixed(2)+' mm');}
   draw();setPlay(!reduced.matches&&!$('workbench').hidden);
 }
 function closestIndex(p){return p.gaps.reduce((best,g,i)=>g.mm<p.gaps[best].mm?i:best,0);}
 function outcomeText(p){
   if(p.outcome==='contact')return 'Contact';
-  if(p.outcome==='reached')return {pickup:'Lift held',placement:'Seated and released',shelf:'Inspection complete',reach:'Target reached'}[task];
+  if(p.outcome==='reached')return {placement:'Seated and released',shelf:'Inspection complete',reach:'Target reached'}[task];
   return 'Missed tolerance';
 }
 function progress(p,frame){
   const done=time>=p.seconds;
-  const phase=task==='pickup'?'Lifting':task==='placement'?'Placing':task==='reach'?'Reaching':time<3.6?'Entering shelf':time<4?'Holding position':'Returning home';
+  const phase=task==='placement'?'Placing':task==='reach'?'Reaching':time<3.6?'Entering shelf':time<4?'Holding position':'Returning home';
   const label=done?outcomeText(p):time===0?'Ready':phase;
   const output=$('outcome');
   if(label!==output.textContent)output.textContent=label;
@@ -144,7 +146,7 @@ $('paths').onchange=()=>view?.paths($('paths').checked);
 $('section').onchange=()=>view?.cutaway($('section').checked);
 $('camera').onchange=()=>view?.cameraView($('camera').value);
 $('resetView').onclick=()=>{$('camera').value='work';view?.reset();};
-const films={pickup:'/pickup.mp4',placement:'/placement.mp4',shelf:'/shelf.mp4',reach:'/demo.mp4'};
+const films={placement:'/placement.mp4',shelf:'/shelf.mp4',reach:'/demo.mp4'};
 $('watch').onclick=()=>{setPlay(false);$('filmTitle').textContent=config[task].title;$('video').src=films[task];$('film').showModal();$('video').play().catch(()=>{});};
 $('closeFilm').onclick=()=>$('film').close();$('film').onclose=()=>$('video').pause();
 function showResults(data){
@@ -158,9 +160,9 @@ function showResults(data){
   }
   const r=data.report,s=data.shelf;
   add(root,'h2','Supervised pose estimation');
-  table(root,['Task','Fixed pose','Predicted pose','Mean XY error'],[['Handle pickup','pickup'],['Peg placement','placement']].map(([name,key])=>{
-    const m=data.visual[key];return [name,m.direct.success+' / 32',m.learned.success+' / 32',m.learned.mean_pose_error_mm+' mm'];
-  }));
+  const m=data.visual.placement;
+  table(root,['Task','Fixed pose','Predicted pose','Mean XY error'],
+    [['Peg placement',m.direct.success+' / 32',m.learned.success+' / 32',m.learned.mean_pose_error_mm+' mm']]);
   add(root,'h2','Shelf inspection');add(root,'p','The same 96 layouts were tested at each width. The arm had to enter, hold for 0.4 seconds and return home without contact.');
   table(root,['Opening','Direct','Fixed','Learned'],s.by_width.map(w=>[w.width+' mm',...['direct','fixed','learned'].map(k=>w[k]+' / '+w.n)]));
   const shelf=add(root,'details','');add(shelf,'summary','Shelf route coverage');
