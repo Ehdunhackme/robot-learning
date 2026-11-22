@@ -2,7 +2,7 @@ import * as T from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {RoomEnvironment} from './vendor/RoomEnvironment.js';
 
-export async function buildScene(container) {
+export async function buildScene(container, {pathRadius=0}={}) {
   const scene=new T.Scene(), renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(devicePixelRatio,1.8));
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
@@ -19,7 +19,7 @@ export async function buildScene(container) {
   controls.target.set(.18,0,.207);
   let shelfMode=false,puckMode=false,assemblyMode=false,followGrip=false;
   const tracked=new T.Vector3(), shift=new T.Vector3();
-  function cameraView(name='work'){
+  function cameraView(name='work',zoomScale=1){
     followGrip=name==='grip';
     if(followGrip && tool){
       tracked.copy(tool.position);
@@ -31,7 +31,7 @@ export async function buildScene(container) {
     }
     const focus=assemblyMode?[.195,.005,.118]:puckMode?[.205,0,.145]:shelfMode?[.21,0,.15]:[.18,0,.20];
     const eye=name==='top'?[.22,-.02,1.2]:name==='mouth'?[-.65,-.22,.32]:assemblyMode?[.76,-.84,.79]:shelfMode?[-.29,-.91,.52]:puckMode?[.54,-.98,.88]:[.76,-.91,.64];
-    camera.position.set(...eye);camera.zoom=assemblyMode?1.20:name==='mouth'?1.2:1;camera.updateProjectionMatrix();
+    camera.position.set(...eye);camera.zoom=(assemblyMode?1.20:name==='mouth'?1.2:1)*zoomScale;camera.updateProjectionMatrix();
     controls.target.set(...focus);controls.update();dirty=true;
   }
   const reset=()=>cameraView();
@@ -121,7 +121,16 @@ export async function buildScene(container) {
       if(!Array.isArray(method?.preview)||method.preview.length<2)continue;
       const points=method.preview.map(v).filter((p,i,arr)=>i===0 || p.distanceToSquared(arr[i-1])>1e-10);
       if(points.length<2)continue;
-      const path=new T.Line(new T.BufferGeometry().setFromPoints(points),new T.LineBasicMaterial({color:0x007c82}));
+      let path;
+      if(pathRadius>0){
+        // A world-space stroke stays legible after video compression.
+        const curve=new T.CurvePath();
+        for(let i=1;i<points.length;i++)curve.add(new T.LineCurve3(points[i-1],points[i]));
+        path=new T.Mesh(new T.TubeGeometry(curve,points.length*3,pathRadius,8,false),
+          new T.MeshBasicMaterial({color:0x007c82}));
+      }else{
+        path=new T.Line(new T.BufferGeometry().setFromPoints(points),new T.LineBasicMaterial({color:0x007c82}));
+      }
       path.visible=pathsOn && key===currentRoute;overlay.add(path);routeLines.set(key,path);
     }
     gap(null);

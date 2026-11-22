@@ -1,11 +1,13 @@
-"""Render the X film at 1920 x 1080 from the three featured MuJoCo replays.
+"""Render the X film at 1920 x 1080 with the planned paths for each controller.
 
-Requires Playwright with Chromium and ffmpeg. All replay data and meshes are local.
+Requires the project's simulator dependencies, Playwright with Chromium and ffmpeg.
 """
 
 import base64
+import json
 from pathlib import Path
 import subprocess
+import sys
 from tempfile import TemporaryDirectory
 from urllib.parse import urlsplit
 
@@ -13,11 +15,21 @@ from playwright.sync_api import sync_playwright
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from runs import replay
+
 REPLAYS = ROOT / "article/public/assets/writings/arcbench/replay"
 OUTPUT = ROOT / "media/so101-x-demo.mp4"
 FPS = 20
+OBSTACLE_LAYOUTS = {
+    "fence": (700011, 0),
+    "post": (700007, 1),
+    "overhead": (700033, 2),
+}
 CHAPTERS = [
-    ("reach", "Reach around the obstacle", ["learned"], 1.0),
+    ("fence", "Reach past the low fence", ["learned"], 1.0),
+    ("post", "Reach around the tall post", ["learned"], 1.0),
+    ("overhead", "Avoid the overhead block", ["learned"], 1.0),
     ("shelf", "Reach inside the shelf and return", ["learned"], 1.2),
     ("placement", "Fit the nut onto the peg", ["direct", "learned"], 1.0),
 ]
@@ -28,19 +40,19 @@ PLAYER = """<!doctype html><meta charset=utf-8>
 <div id="view"></div>
 <script type="module">
 import {buildScene} from "./scene.js";
-const container=document.querySelector("#view"), view=await buildScene(container);
+const container=document.querySelector("#view"), view=await buildScene(container,{pathRadius:0.00145});
 const film=document.createElement("canvas");film.width=1920;film.height=1080;
 const ctx=film.getContext("2d");
 let run, modes, title;
-window.loadChapter=async ([key, description, methods])=>{
-  run=await (await fetch("./"+key+".json")).json();
-  modes=methods;title=description;container.style.width=(film.width/modes.length)+"px";
+window.loadChapter=async ([data, description, methods])=>{
+  run=data;modes=methods;title=description;container.style.width=(film.width/modes.length)+"px";
   await new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done)));
-  view.setup(run);view.reset();view.paths(false);
+  view.setup(run);view.cameraView("work",run.fixture ? 0.84 : 1);view.paths(true);
   return Math.max(...modes.map(mode=>run[mode].seconds));
 };
 window.frameAt=time=>{
   for(const [side,mode] of modes.entries()){
+    view.showRoute(mode);
     const frames=run[mode].frames;
     let i=frames.findIndex(f=>f[0]>time);
     if(i<0)i=frames.length;
@@ -73,7 +85,10 @@ def main():
     OUTPUT.parent.mkdir(exist_ok=True)
     with TemporaryDirectory(dir=OUTPUT.parent) as directory, sync_playwright() as pw:
         draft = Path(directory) / "film.mp4"
-        browser = pw.chromium.launch(args=["--enable-unsafe-swiftshader"])
+        gpu_args = ["--enable-gpu", "--enable-unsafe-swiftshader"]
+        if sys.platform == "win32":
+            gpu_args.extend(["--use-gl=angle", "--use-angle=d3d11"])
+        browser = pw.chromium.launch(args=gpu_args)
         page = browser.new_page(viewport={"width": 1920, "height": 1080}, device_scale_factor=1)
         page.route("http://replay.local/**", serve)
         page.goto("http://replay.local/film.html")
@@ -84,7 +99,15 @@ def main():
         with subprocess.Popen(command, stdin=subprocess.PIPE) as encoder:
             try:
                 for task, title, modes, speed in CHAPTERS:
-                    duration = page.evaluate("args=>loadChapter(args)", [task, title, modes])
+                    if task in OBSTACLE_LAYOUTS:
+                        seed, family = OBSTACLE_LAYOUTS[task]
+                        run = replay(seed, family, 0, 0)
+                    else:
+                        run = json.loads((REPLAYS / f"{task}.json").read_text(encoding="utf-8"))
+                    for mode in modes:
+                        if len(run[mode].get("preview", [])) < 2:
+                            raise ValueError(f"Missing planned path for {task}/{mode}")
+                    duration = page.evaluate("args=>loadChapter(args)", [run, title, modes])
                     count = round(duration * FPS / speed)
                     for i in range(count + 1):
                         frame = page.evaluate("t=>frameAt(t)", duration * i / count)
