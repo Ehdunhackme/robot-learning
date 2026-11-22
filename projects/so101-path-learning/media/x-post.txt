@@ -1,5 +1,5 @@
 I trained a simulated SO-101 arm to reach around obstacles and fit a nut onto a peg.
 
-Both arms in the last clip pick up the nut the same way. Aiming at the average peg pose worked on 2 of 32 new layouts. Using the peg’s silhouette worked on all 32.
+Both arms in the last clip use the same grasp. The left aims at the average peg pose and seats 2 of 32 nuts. The right uses the peg’s silhouette and seats all 32.
 
 https://dunlichan.com/writings/so101-path-learning/
