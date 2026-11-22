@@ -70,8 +70,8 @@ def record(page, task, output):
                         if task=="reach":
                             draw.text((WIDTH*side+22,52),("Low fence","Tall post","Overhead zone")[section],
                                       font=font(18),fill="#555b62")
-                        if task=="assembly" and side==1 and idx==round(length*FPS*.47):
-                            pic.crop((0,85,720,463)).resize((1200,630),Image.Resampling.LANCZOS).save(output/"social.jpg",quality=91)
+                        if task=="puck" and side==1 and idx==round(length*FPS*.47):
+                            pic.crop((0,152,720,530)).resize((1200,630),Image.Resampling.LANCZOS).save(output/"social.jpg",quality=91)
                     draw.line((WIDTH-1,0,WIDTH-1,HEIGHT),fill="#aeb2b6",width=1)
                     if not section and idx==round(length*FPS*.47):
                         frame.save(output/(task+".webp"),quality=89)

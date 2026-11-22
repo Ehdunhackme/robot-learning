@@ -1,18 +1,14 @@
 # SO-101 path learning
 
-The simulator runs six SO-101 tasks in MuJoCo. Try a two-peg relay, a transfer over a rail, a square nut on a peg, a puck push, a shelf inspection or an obstacle reach. Choose a controller and scrub the replay to see where strategies diverge. Settings include layout adjustments, planned paths, camera angles and measurements.
+The simulator runs three SO-101 tasks in MuJoCo. Obstacle reach and shelf inspection use trained path scorers. Puck push chooses a paddle stroke from similar training layouts. Choose a controller and scrub the replay to see where strategies diverge. Settings include layout adjustments, planned paths, camera angles and measurements.
 
 ![SO-101 pushing a blue puck across a raised work surface](media/simulator.png)
 
-[Watch the nut and peg comparison](web/assembly.mp4) · [Watch the puck comparison](web/puck.mp4) · [Watch the shelf comparison](web/shelf.mp4) · [Shelf study](SHELF_STUDY.md) · [Obstacle reach results](RESULTS.md) · [Run autoresearch](program.md)
+[Watch the obstacle reach comparison](web/demo.mp4) · [Watch the puck comparison](web/puck.mp4) · [Watch the shelf comparison](web/shelf.mp4) · [Shelf study](SHELF_STUDY.md) · [Obstacle reach results](RESULTS.md) · [Run autoresearch](program.md)
 
 [Run the interactive article locally](article/README.md). It includes the video player, 3D viewer, interactive training curve and per-run data.
 
 ## Start with these replays
-
-**Two-peg relay** requires two separate grips, lifts and stable releases. The measured regrasp controller gets the simulated nut pose for the second pickup. Compare it with a biased pose estimate on the same layout. **Rail transfer** starts on a peg and adds a collision-checked rail between the two pegs. Change the rail height and compare the two carry heights. Both are scripted controllers. Run `python course_study.py` to reproduce the [paired pilot](experiments/courses/pilot.json).
-
-In **Nut on peg**, try **Jaws open** first. The arm traces the complete path but leaves the nut on the table. Switch to **Initial estimate** or **Recheck peg** to see the fingers grip the handle. Reduce the side clearance to 1 mm and compare the two placements on the same layout.
 
 In **Puck push**, both controllers get the same 60 mm opening layout. The learned stroke finishes 14.62 mm from the target center and the straight stroke finishes 9.50 mm away. Success requires the jaws to hold the paddle throughout puck contact, a clean stroke, a final error of at most 10 mm and a final puck speed below 5 mm/s. Choose **Release paddle** to see what happens when the arm opens its jaws.
 
@@ -36,7 +32,7 @@ The default URL is http://127.0.0.1:8766/. The browser uses WebGL 2 and the incl
 
 ## Puck push study
 
-[Robot path learning with an SO-101 arm](https://dunlichan.com/writings/so101-path-learning/) includes the gripper simulator, measured training curve, paddle comparison and surface-transfer test. To reproduce the transfer test on the original 64 layouts, run `python puck_transfer.py --workers 6`. It keeps both controllers frozen, checks each nominal outcome against the original trials and writes [the per-run results](experiments/puck/transfer.json).
+[Robot path learning with an SO-101 arm](https://dunlichan.com/writings/so101-path-learning/) includes the path-learning simulator, measured training curve, paddle comparison and surface-transfer test. To reproduce the transfer test on the original 64 layouts, run `python puck_transfer.py --workers 6`. It keeps both controllers frozen, checks each nominal outcome against the original trials and writes [the per-run results](experiments/puck/transfer.json).
 
 In the original wrist-mounted paddle experiment, the controller learns which of seven lateral paddle offsets to use from the outcomes of 192 simulated training layouts. It estimates the cost of each action using nearby layouts in starting position, push direction and distance. Validation on 48 separate layouts selected three neighbors. On 64 held-out layouts, the learned push succeeded 45 times with 12.0 mm mean endpoint error. The straight push succeeded 18 times with 20.1 mm mean error. Validation selected the straight push as the best constant action. These figures describe one simulated puck, paddle, friction setting and split. [Model](experiments/puck/push.json) · [Episode data](experiments/puck/episodes.json)
 

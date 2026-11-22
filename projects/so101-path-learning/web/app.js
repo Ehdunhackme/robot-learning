@@ -4,13 +4,6 @@ import {buildScene} from './scene.js';
 
 const $ = id => document.getElementById(id);
 const config = {
-  relay: {title:'Two-peg relay',brief:'Seat the nut on the middle peg, release it, then pick it up again and move it to the final peg.',seed:2026,
-    sliders:[['clearance','Side clearance',1,4,2,'mm'],['bias','Regrasp estimate error',0,10,8,'mm']],methods:[['scripted','Measured regrasp'],['nominal','Estimated regrasp']]},
-  transfer: {title:'Rail transfer',brief:'Lift the nut off its peg, clear the rail and seat it on the far peg.',seed:2040,
-    sliders:[['clearance','Side clearance',1,4,2,'mm'],['rail','Rail height',38,62,52,'mm']],methods:[['scripted','Clear the rail'],['nominal','Low carry']]},
-  assembly: {title:'Nut on peg', brief:'Grip the handle, lift the nut and lower it onto the square peg.', seed:2026,
-    sliders:[['clearance','Side clearance',1,4,3,'mm'],['error','Peg estimate error',0,8,5,'mm']],
-    methods:[['scripted','Recheck peg'],['nominal','Initial estimate'],['open','Jaws open']]},
   puck: {title:'Puck push', brief:'Slide the blue puck into the target circle and let it settle.', seed:2402,
     sliders:[['distance','Push distance',45,77,60,'mm']], methods:[['learned','Learned push'],['direct','Straight push'],['release','Release paddle']]},
   shelf: {title:'Shelf inspection', brief:'Reach inside the shelf, hold at the target, then return home.', seed:720001,
@@ -21,7 +14,7 @@ const config = {
     methods:[['learned','Learned route'],['direct','Direct reach']]}
 };
 const url = new URL(location.href);
-let task = url.searchParams.get('task') || url.searchParams.get('study') || 'relay';
+let task = url.searchParams.get('task') || url.searchParams.get('study') || 'puck';
 if (!Object.hasOwn(config,task)) task='puck';
 let info, view, run, seed, mode='learned', ticket=0, time=0, playing=false, last=0, inspect=false;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -65,7 +58,7 @@ function busy(on){
 async function simulate(){
   if(!view)return;
   const seq=++ticket;setPlay(false);busy(true);message('');$('loading').hidden=false;$('loading').textContent='Preparing replay…';
-  const query=new URLSearchParams({family:task==='relay'?7:task==='transfer'?6:task==='assembly'?5:task==='puck'?4:task==='shelf'?3:$('family').value,seed});
+  const query=new URLSearchParams({family:task==='puck'?4:task==='shelf'?3:$('family').value,seed});
   for(const [id] of config[task].sliders)query.set(id,$(id).value);
   try{
     let data=cache.get(query.toString());
@@ -93,7 +86,8 @@ function pick(key){
   mode=key;time=0;inspect=false;$('controller').value=key;view.gap(null);view.showRoute(key);view.paths($('paths').checked);
   const p=method();
   $('duration').textContent='/ '+p.seconds.toFixed(2)+' s';$('metrics').replaceChildren();
-  metric('Final outcome',outcomeText(p));metric('Layout',run.seed);if(p.stages)metric('Placements',p.completed+' / '+p.required);if(run.assembly){metric('Peak lift',p.lift_mm+' mm');metric('Seated after release',p.seated_s+' s');}else metric(task==='puck'?'Puck displacement':'Gripper travel',p.distance_mm+' mm');
+  metric('Final outcome',outcomeText(p));metric('Layout',run.seed);
+  metric(task==='puck'?'Puck displacement':'Gripper travel',p.distance_mm+' mm');
   metric(task==='shelf'?'Final home error':'Final target error',p.error_mm+' mm');
   if(task==='puck')metric('First puck contact',p.first_touch===null?'None':p.first_touch.toFixed(2)+' s');
   if(task==='shelf'){const g=p.gaps[closestIndex(p)];metric('Closest surfaces',pretty(g.link)+' / '+g.panel.toLowerCase());metric('Sampled clearance',g.mm.toFixed(2)+' mm');}
@@ -102,7 +96,7 @@ function pick(key){
 function closestIndex(p){return p.gaps.reduce((best,g,i)=>g.mm<p.gaps[best].mm?i:best,0);}
 function outcomeText(p){
   if(p.outcome==='contact')return mode==='release'?'Paddle dropped':'Contact';
-  if(p.outcome==='reached')return {relay:'Both placements complete',transfer:'Rail cleared and nut seated',assembly:'Seated and released',puck:'On target',shelf:'Inspection complete',reach:'Target reached'}[task];
+  if(p.outcome==='reached')return {puck:'On target',shelf:'Inspection complete',reach:'Target reached'}[task];
   if(task==='puck' && p.error_mm<=10 && !p.settled)return 'Still moving';
   return task==='puck'?'Outside target':'Missed tolerance';
 }
@@ -110,7 +104,7 @@ function progress(p,frame){
   const done=time>=p.seconds;
   const phase=done?outcomeText(p):time===0?'Ready':task==='puck'?
     (time>=2.8?'Settling':time>=2.24?'Withdrawing':p.first_touch!==null&&time>=p.first_touch?'Pushing':'Approaching puck'):
-    run.assembly?'Moving the nut':task==='reach'?'Reaching':time<3.6?'Entering shelf':time<4?'Holding position':'Returning home';
+    task==='reach'?'Reaching':time<3.6?'Entering shelf':time<4?'Holding position':'Returning home';
   let label=phase;
   if(task==='puck'){
     const mm=done?p.error_mm:1000*Math.hypot(frame[4][0]-run.goal[0],frame[4][1]-run.goal[1]);
@@ -153,7 +147,7 @@ $('paths').onchange=()=>view?.paths($('paths').checked);
 $('section').onchange=()=>view?.cutaway($('section').checked);
 $('camera').onchange=()=>view?.cameraView($('camera').value);
 $('resetView').onclick=()=>{$('camera').value='work';view?.reset();};
-const films={relay:'/relay.mp4',transfer:'/transfer.mp4',assembly:'/assembly.mp4',puck:'/puck.mp4',shelf:'/shelf.mp4',reach:'/demo.mp4'};
+const films={puck:'/puck.mp4',shelf:'/shelf.mp4',reach:'/demo.mp4'};
 $('watch').onclick=()=>{setPlay(false);$('filmTitle').textContent=config[task].title;$('video').src=films[task];$('film').showModal();$('video').play().catch(()=>{});};
 $('closeFilm').onclick=()=>$('film').close();$('film').onclose=()=>$('video').pause();
 function showResults(data){
