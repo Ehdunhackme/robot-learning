@@ -1,0 +1,17 @@
+{
+  "winner": 48,
+  "seed": 7231,
+  "device": "NVIDIA A100-SXM4-40GB",
+  "trials": [
+    {
+      "width": 48,
+      "cost": 0.4189491271972656,
+      "goals": 187
+    },
+    {
+      "width": 96,
+      "cost": 0.4226813018321991,
+      "goals": 185
+    }
+  ]
+}

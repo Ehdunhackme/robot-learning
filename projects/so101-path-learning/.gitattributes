@@ -1,0 +1,10 @@
+* text=auto
+*.stl binary
+*.bin binary
+*.mp4 binary
+*.npz binary
+*.png binary
+*.jpg binary
+*.webp binary
+*.woff2 binary
+

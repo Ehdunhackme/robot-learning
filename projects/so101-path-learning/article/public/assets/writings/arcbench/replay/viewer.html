@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SO-101 path simulator</title>
+<link rel="stylesheet" href="./viewer.css">
+<link rel="stylesheet" href="../player.css">
+<script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
+</head><body>
+<main>
+<div id="stage" aria-label="Robot workcell">
+  <div id="loading" role="status">Loading the arm…</div>
+</div>
+  <div class="so-playerbar">
+    <button id="play" class="so-play" aria-label="Play replay" disabled></button>
+    <input id="time" class="so-seek" type="range" min="0" max="1000" value="0" aria-label="Replay position" disabled>
+    <output id="clock">0.00 s</output>
+    <select id="mode" aria-label="Controller" disabled></select>
+  </div>
+<p id="notice" role="status" hidden></p>
+<div class="settings">
+<button id="random" disabled>Randomize layout</button>
+<details><summary>Advanced settings</summary>
+<div class="options disclosure-body">
+  <fieldset><legend>Layout</legend>
+    <label for="seed">Layout seed</label><input type="number" id="seed" min="0" max="2147483647" step="1" required>
+    <div id="example-row" hidden><label for="example">Shelf example</label><select id="example"><option value="">Custom</option><option value="720001,110,75">Roof clearance</option><option value="610002,180,102">Learned route succeeds</option><option value="610014,125,97">Fixed route succeeds</option></select></div>
+    <div id="fixture-row" hidden><label for="family">Fixture</label><select id="family"><option value="0">Low fence</option><option value="1">Tall post</option><option value="2">Overhead zone</option></select></div>
+    <div id="sliders"></div><button id="apply" disabled>Apply layout</button>
+  </fieldset>
+  <fieldset><legend>Playback and camera</legend>
+    <label for="speed">Playback speed</label><select id="speed"><option value=".5">0.5×</option><option selected value="1">1×</option><option value="2">2×</option></select>
+    <label for="camera">Camera</label><select id="camera"><option value="work">Workcell</option><option value="top">Overhead</option></select>
+    <label class="check" id="path-row"><input id="paths" type="checkbox" checked> Show planned paths</label>
+    <label class="check" id="cut-row"><input id="cut" type="checkbox" checked> Cutaway shelf</label>
+    <button id="reset">Reset camera</button>
+  </fieldset>
+  <fieldset><legend>Run details</legend>
+    <dl id="metrics"></dl><button id="closest" hidden>Inspect closest pass</button>
+  </fieldset>
+</div></details></div>
+</main><script type="module" src="./replay.js"></script></body></html>

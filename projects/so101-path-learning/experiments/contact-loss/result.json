@@ -1,0 +1,19 @@
+{
+  "tag": "contact-loss",
+  "recipe": "skeleton",
+  "width": 96,
+  "depth": 2,
+  "loss": "weighted",
+  "updates": 1000,
+  "batch": 256,
+  "seed": 6401,
+  "device": "NVIDIA A100-SXM4-40GB",
+  "seconds": 4.15,
+  "validation": {
+    "cost": 0.16059515535926283,
+    "success": 0.9,
+    "mean_joint_length_rad": 2.8290704898446806,
+    "tasks": 640
+  },
+  "source_hash": "0d3c4ed44b598263ee091a1f0700ebae941263e6594e4caf507b762740d420de"
+}

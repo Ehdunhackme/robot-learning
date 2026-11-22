@@ -1,0 +1,19 @@
+{
+  "tag": "capacity",
+  "recipe": "raw",
+  "width": 96,
+  "depth": 2,
+  "loss": "mse",
+  "updates": 1000,
+  "batch": 256,
+  "seed": 6401,
+  "device": "NVIDIA A100-SXM4-40GB",
+  "seconds": 2.9,
+  "validation": {
+    "cost": 0.17615698483547212,
+    "success": 0.8921875,
+    "mean_joint_length_rad": 2.968795806242642,
+    "tasks": 640
+  },
+  "source_hash": "b04023a43d4a78c63019833faf64afe4e47056efd143939b62da85e10185bc20"
+}

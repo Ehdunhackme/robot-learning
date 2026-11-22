@@ -1,0 +1,1 @@
+{"train":192,"validation":48,"test":64,"neighbors":3,"validation_cost_mm":{"1":10.142708333333333,"3":9.490833333333333,"5":9.959583333333333,"9":10.238541666666666,"15":10.09875},"fixed_action_mm":[0,0],"scores":{"learned":{"completed":45,"mean_error_mm":12.0},"straight":{"completed":18,"mean_error_mm":20.1},"fixed":{"completed":18,"mean_error_mm":20.1}}}

@@ -1,0 +1,19 @@
+{
+  "tag": "link-clearance",
+  "recipe": "skeleton",
+  "width": 96,
+  "depth": 2,
+  "loss": "mse",
+  "updates": 1000,
+  "batch": 256,
+  "seed": 6401,
+  "device": "NVIDIA A100-SXM4-40GB",
+  "seconds": 3.9,
+  "validation": {
+    "cost": 0.1604515902914223,
+    "success": 0.9,
+    "mean_joint_length_rad": 2.830188822246009,
+    "tasks": 640
+  },
+  "source_hash": "0d3c4ed44b598263ee091a1f0700ebae941263e6594e4caf507b762740d420de"
+}

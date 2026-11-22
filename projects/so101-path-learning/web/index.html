@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SO-101 simulator</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="importmap">{"imports":{"three":"/vendor/three.module.min.js"}}</script>
+</head>
+<body>
+<header class="mast"><div class="shell headrow">
+  <a class="brand" href="./" aria-label="SO-101 simulator home">SO-101 simulator</a>
+  <nav aria-label="Workspace"><a href="#simulator" id="workTab" aria-current="page">Simulator</a><a href="#results" id="logTab">Results</a></nav>
+</div></header>
+<main id="workbench" class="shell">
+  <nav class="tasks" aria-label="Simulation tasks">
+    <button data-task="relay">Two-peg relay</button><button data-task="transfer">Rail transfer</button><button data-task="assembly">Nut on peg</button><button data-task="puck">Puck push</button><button data-task="shelf">Shelf inspection</button><button data-task="reach">Obstacle reach</button>
+  </nav>
+  <section class="intro"><div><h1 id="sceneTitle">Two-peg relay</h1><p id="brief">Seat the nut on the middle peg, release it, then pick it up again and move it to the final peg.</p></div><button class="secondary" id="new" disabled>New layout</button></section>
+  <section class="stage" aria-label="Simulation replay">
+    <div id="viewport"><p id="loading" role="status">Loading the arm…</p></div>
+    <div class="transport">
+      <button id="play" class="primary" aria-label="Play or pause motion" disabled>Play</button>
+      <input id="scrub" type="range" min="0" max="1000" value="0" aria-label="Replay position" disabled>
+      <output id="time">0.00 s</output><span class="duration" id="duration"></span>
+      <select id="speed" aria-label="Playback speed"><option value=".5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
+    </div>
+  </section>
+  <div class="summary"><label for="controller">Controller <select id="controller" disabled></select></label><div id="outcome" aria-label="Replay progress"></div></div>
+  <p id="status" role="status" hidden></p>
+  <details id="settings"><summary>Settings and run details</summary>
+    <div class="settings-grid disclosure-body">
+      <section><h2>Layout</h2>
+        <label id="exampleRow">Shelf example<select id="examples"></select></label>
+        <label id="fixtureRow">Fixture<select id="family"><option value="0">Low fence</option><option value="1">Tall post</option><option value="2">Overhead zone</option></select></label>
+        <div id="sliders"></div><button id="run" class="secondary" disabled>Apply layout</button>
+      </section>
+      <section><h2>View</h2>
+        <label>Camera<select id="camera"><option value="work">Workcell</option><option value="top">Overhead</option><option id="mouthView" value="mouth">Shelf opening</option></select></label>
+        <label id="sectionRow" class="check"><input id="section" type="checkbox" checked> Cutaway shelf</label>
+        <label id="pathRow" class="check"><input id="paths" type="checkbox" checked> Show planned paths</label>
+        <button id="resetView" class="textlink">Reset camera</button>
+      </section>
+      <section><h2>Run details</h2><dl id="metrics"></dl>
+        <button id="closest" class="textlink">Inspect closest pass</button>
+        <button id="watch" class="textlink">Watch comparison film</button>
+      </section>
+    </div>
+  </details>
+</main>
+<main id="research" class="shell" hidden><div class="intro"><div><h1>Results</h1><p>Held-out runs with the simulated SO-101 arm.</p></div></div><div id="findings"></div></main>
+<dialog id="film"><div class="filmhead"><h2 id="filmTitle">Comparison film</h2><button id="closeFilm" class="secondary">Close</button></div><video id="video" controls preload="none" playsinline></video></dialog>
+<script type="module" src="/app.js"></script>
+</body></html>

@@ -1,0 +1,3 @@
+[submodule "projects/so101-path-learning/tools/autoresearch"]
+	path = projects/so101-path-learning/tools/autoresearch
+	url = https://github.com/karpathy/autoresearch.git

@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+tools/autoresearch/
+release/
+*.log
+media/debug.png
+

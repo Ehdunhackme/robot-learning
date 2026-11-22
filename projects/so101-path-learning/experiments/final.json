@@ -1,0 +1,117 @@
+{
+  "best": "shared-risk",
+  "train": 4096,
+  "validation": 640,
+  "test": 800,
+  "fixed_path": 8,
+  "metrics": {
+    "Direct joint path": {
+      "cost": 0.84125,
+      "success": 0.15875,
+      "mean_joint_length_rad": 1.7851211077903804,
+      "tasks": 800,
+      "clear_count": 127
+    },
+    "Fixed detour": {
+      "cost": 0.2047255338407675,
+      "success": 0.89375,
+      "mean_joint_length_rad": 3.3928219467372958,
+      "tasks": 800,
+      "clear_count": 715
+    },
+    "Sparse geometry rule": {
+      "cost": 0.32992262139762785,
+      "success": 0.6925,
+      "mean_joint_length_rad": 2.296772940426754,
+      "tasks": 800,
+      "clear_count": 554
+    },
+    "First learned model": {
+      "cost": 0.1786820272859916,
+      "success": 0.895,
+      "mean_joint_length_rad": 3.0223898880468267,
+      "tasks": 800,
+      "clear_count": 716
+    },
+    "Selected model": {
+      "cost": 0.1367617585817122,
+      "success": 0.90375,
+      "mean_joint_length_rad": 2.5044357258325345,
+      "tasks": 800,
+      "clear_count": 723
+    },
+    "Candidate oracle": {
+      "cost": 0.12371900357745566,
+      "success": 0.9125,
+      "mean_joint_length_rad": 2.307193823783441,
+      "tasks": 800,
+      "clear_count": 730
+    }
+  },
+  "trials": [
+    {
+      "trial": "baseline",
+      "validation_cost": "0.177892",
+      "clear_rate": "0.893750",
+      "status": "keep",
+      "mean_joint_length_rad": 3.020817911786092
+    },
+    {
+      "trial": "capacity",
+      "validation_cost": "0.176157",
+      "clear_rate": "0.892188",
+      "status": "keep",
+      "mean_joint_length_rad": 2.968795806242642
+    },
+    {
+      "trial": "relative",
+      "validation_cost": "0.160764",
+      "clear_rate": "0.898438",
+      "status": "keep",
+      "mean_joint_length_rad": 2.8213155000776418
+    },
+    {
+      "trial": "link-clearance",
+      "validation_cost": "0.160452",
+      "clear_rate": "0.900000",
+      "status": "keep",
+      "mean_joint_length_rad": 2.830188822246009
+    },
+    {
+      "trial": "contact-loss",
+      "validation_cost": "0.160595",
+      "clear_rate": "0.900000",
+      "status": "discard",
+      "mean_joint_length_rad": 2.8290704898446806
+    },
+    {
+      "trial": "shared-risk",
+      "validation_cost": "0.142108",
+      "clear_rate": "0.896875",
+      "status": "keep",
+      "mean_joint_length_rad": 2.5067365677043787
+    }
+  ],
+  "paired_cost_reduction_95": [
+    0.03155378111433103,
+    0.05204587773515187
+  ],
+  "servo": {
+    "Direct joint path": {
+      "contact": 78,
+      "miss": 0,
+      "reached": 18
+    },
+    "Selected model": {
+      "contact": 9,
+      "miss": 0,
+      "reached": 87
+    }
+  },
+  "servo_tasks": 96,
+  "hashes": {
+    "train": "f6611377af896bc7a9f70deaec043b6b57932cbd60060c22f59e8499b09b97a3",
+    "validation": "93affd268278c6e4f0f02cbb7ff1512a31f04f8838b8e2babba27ce78c7c7ed1",
+    "test": "e3e562d5cd9fb5136430ed7148044cd66530b42a13ad797f23bd65d0f5fd196a"
+  }
+}

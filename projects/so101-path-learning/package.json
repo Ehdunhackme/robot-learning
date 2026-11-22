@@ -1,0 +1,8 @@
+{
+  "name": "so101-pathlab",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Arcbench SO-101 path learning studio",
+  "type": "module",
+  "dependencies": {"three": "0.180.0"}
+}
